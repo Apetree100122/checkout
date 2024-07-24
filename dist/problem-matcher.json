@@ -1,13 +1,1 @@
-{
-    "problemMatcher": [
-        {
-            "owner": "checkout-git",
-            "pattern": [
-                {
-                    "regexp": "^(fatal|error): (.*)$",
-                    "message": 2
-                }
-            ]
-        }
-    ]
-}
+{"problemMatcher":[{"owner": "checkout-git","pattern":[{"regexp": "^(fatal|error): (.*)$","message": 2}]}
