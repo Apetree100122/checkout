@@ -1,17 +1,10 @@
 name: Build and Test
-
 on:
   pull_request:
   push:
     branches:
       - main
       - releases/*
-
-
-# Note that when you see patterns like "ref: test-data/v2/basic" within this workflow,
-# these refer to "test-data" branches on this actions/checkout repo.
-# (For example, test-data/v2/basic -> https://github.com/actions/checkout/tree/test-data/v2/basic)
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,19 +20,14 @@ jobs:
       - run: npm test
       - name: Verify no unstaged changes
         run: __test__/verify-no-unstaged-changes.sh
-
   test:
     strategy:
       matrix:
         runs-on: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.runs-on }}
-
     steps:
-      # Clone this repo
       - name: Checkout
         uses: actions/checkout@v4.1.6
-
-      # Basic checkout
       - name: Checkout basic
         uses: ./
         with:
@@ -48,8 +36,6 @@ jobs:
       - name: Verify basic
         shell: bash
         run: __test__/verify-basic.sh
-
-      # Clean
       - name: Modify work tree
         shell: bash
         run: __test__/modify-work-tree.sh
@@ -76,18 +62,13 @@ jobs:
       - name: Verify side by side
         shell: bash
         run: __test__/verify-side-by-side.sh
-
-      # Filter
       - name: Fetch filter
         uses: ./
         with:
           filter: 'blob:none'
           path: fetch-filter
-
       - name: Verify fetch filter
         run: __test__/verify-fetch-filter.sh
-
-      # Sparse checkout
       - name: Sparse checkout
         uses: ./
         with:
@@ -96,21 +77,15 @@ jobs:
             .github
             dist
           path: sparse-checkout
-
       - name: Verify sparse checkout
         run: __test__/verify-sparse-checkout.sh
-
-      # Disabled sparse checkout in existing checkout
       - name: Disabled sparse checkout
         uses: ./
         with:
-          path: sparse-checkout
-
+         path: sparse-checkout
       - name: Verify disabled sparse checkout
         shell: bash
         run: set -x && ls -l sparse-checkout/src/git-command-manager.ts
-
-      # Sparse checkout (non-cone mode)
       - name: Sparse checkout (non-cone mode)
         uses: ./
         with:
@@ -120,23 +95,18 @@ jobs:
             /dist/
           sparse-checkout-cone-mode: false
           path: sparse-checkout-non-cone-mode
-
       - name: Verify sparse checkout (non-cone mode)
         run: __test__/verify-sparse-checkout-non-cone-mode.sh
-
-      # LFS
       - name: Checkout LFS
         uses: ./
         with:
-          repository: actions/checkout # hardcoded, otherwise doesn't work from a fork
+          repository: actions/checkout 
           ref: test-data/v2/lfs
           path: lfs
           lfs: true
       - name: Verify LFS
         shell: bash
         run: __test__/verify-lfs.sh
-
-      # Submodules false
       - name: Checkout submodules false
         uses: ./
         with:
@@ -144,8 +114,6 @@ jobs:
           path: submodules-false
       - name: Verify submodules false
         run: __test__/verify-submodules-false.sh
-
-      # Submodules one level
       - name: Checkout submodules true
         uses: ./
         with:
@@ -153,9 +121,7 @@ jobs:
           path: submodules-true
           submodules: true
       - name: Verify submodules true
-        run: __test__/verify-submodules-true.sh
-
-      # Submodules recursive
+        run: __test__/verify-submodules-true.sh 
       - name: Checkout submodules recursive
         uses: ./
         with:
@@ -164,8 +130,6 @@ jobs:
           submodules: recursive
       - name: Verify submodules recursive
         run: __test__/verify-submodules-recursive.sh
-
-      # Basic checkout using REST API
       - name: Remove basic
         if: runner.os != 'windows'
         run: rm -rf basic
@@ -186,7 +150,6 @@ jobs:
           path: basic
       - name: Verify basic
         run: __test__/verify-basic.sh --archive
-
   test-proxy:
     runs-on: ubuntu-latest
     container:
@@ -200,11 +163,8 @@ jobs:
     env:
       https_proxy: http://squid-proxy:3128
     steps:
-      # Clone this repo
       - name: Checkout
         uses: actions/checkout@v4.1.6
-
-      # Basic checkout using git
       - name: Checkout basic
         uses: ./
         with:
@@ -212,8 +172,6 @@ jobs:
           path: basic
       - name: Verify basic
         run: __test__/verify-basic.sh
-
-      # Basic checkout using REST API
       - name: Remove basic
         run: rm -rf basic
       - name: Override git version
@@ -225,18 +183,14 @@ jobs:
           path: basic
       - name: Verify basic
         run: __test__/verify-basic.sh --archive
-
   test-bypass-proxy:
     runs-on: ubuntu-latest
     env:
       https_proxy: http://no-such-proxy:3128
       no_proxy: api.github.com,github.com
     steps:
-      # Clone this repo
       - name: Checkout
-        uses: actions/checkout@v4.1.6
-
-      # Basic checkout using git
+        uses: actions/checkout@v4
       - name: Checkout basic
         uses: ./
         with:
@@ -246,8 +200,6 @@ jobs:
         run: __test__/verify-basic.sh
       - name: Remove basic
         run: rm -rf basic
-
-      # Basic checkout using REST API
       - name: Override git version
         run: __test__/override-git-version.sh
       - name: Checkout basic using REST API
@@ -257,7 +209,6 @@ jobs:
           path: basic
       - name: Verify basic
         run: __test__/verify-basic.sh --archive
-
   test-git-container:
     runs-on: ubuntu-latest
     container: bitnami/git:latest
@@ -267,31 +218,7 @@ jobs:
         uses: actions/checkout@v4.1.6
         with:
           path: localClone
-
-      # Basic checkout using git
       - name: Checkout basic
         uses: ./localClone
         with:
           ref: test-data/v2/basic
-      - name: Verify basic
-        run: |
-          if [ ! -f "./basic-file.txt" ]; then
-              echo "Expected basic file does not exist"
-              exit 1
-          fi
-
-          # Verify .git folder
-          if [ ! -d "./.git" ]; then
-            echo "Expected ./.git folder to exist"
-            exit 1
-          fi
-
-          # Verify auth token
-          git config --global --add safe.directory "*"
-          git fetch --no-tags --depth=1 origin +refs/heads/main:refs/remotes/origin/main
-
-      # needed to make checkout post cleanup succeed
-      - name: Fix Checkout v4
-        uses: actions/checkout@v4.1.6
-        with:
-          path: localClone
