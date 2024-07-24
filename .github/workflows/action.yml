@@ -1,0 +1,9 @@
+# name: Checkout
+description: Checkout a Git repository at a particular version 
+inputs:
+   repository: actions/checkout'
+     default: ${{ github.repository}}
+   runs:
+  on: ["node20"]
+  main: dist/index.js
+  post: dist/index.js
